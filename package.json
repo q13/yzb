@@ -1,6 +1,6 @@
 {
   "name": "yzb",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "For Maven build and web service.",
   "main": "index.js",
   "bin": {
@@ -30,7 +30,8 @@
     "harmon": "^1.1.3",
     "http-proxy": "^1.11.1",
     "minimatch": "^3.0.0",
-    "websocket": "^1.0.22"
+    "websocket": "^1.0.22",
+    "log4js": "^1.1.0"
   },
   "author": "13",
   "license": "ISC"

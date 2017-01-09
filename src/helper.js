@@ -1,16 +1,21 @@
 var path = require('path'),
-  fs = require('fs');
+  fs = require('fs'),
+  log4js = require('log4js');
 
+var logger = log4js.getLogger();
 var helper = {
   osHomePath: process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'],
   isWin: process.platform == 'win32' ? true : false,
+  logger: function () {
+    return logger;
+  },
   run: function(generateFun) {
     var g = generateFun(resume);
     g.next();
 
     function resume(value) {
       if (value) {
-        console.error(value);
+        logger.error(value);
         return;
       }
       g.next();
@@ -21,16 +26,16 @@ var helper = {
       dir = dirs.shift(),
       root = path.join(root || '', dir);
 
-    console.log(dirs.join(path.sep));
+    logger.log(dirs.join(path.sep));
     try {
       fs.mkdirSync(root);
     } catch (e) {
       //dir wasn't made, something went wrong
-      console.log(dirpath);
-      console.log(root);
+      logger.log(dirpath);
+      logger.log(root);
       if (!fs.statSync(root).isDirectory()) throw new Error(e);
     }
-    return !dirs.length || util.mkdir(dirs.join(path.sep), root);
+    return !dirs.length || helper.mkdir(dirs.join(path.sep), root);
   },
   mkdirSync: function(path) {
     try {

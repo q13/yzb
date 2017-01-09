@@ -4,22 +4,24 @@ var path = require('path'),
   Download = require('download'),
   downloadStatus = require('download-status'),
   Decompress = require('decompress'),
+  helper = require('././helper.js'),
   config = require('./config.js');
+var logger = helper.logger();
 var exports = module.exports = {};
 function downloadFile(url, destPath, fileName, callback) {
   if (fs.existsSync(path.join(destPath, fileName))) {
-    console.log('Info: ' + fileName + ' is exits ');
+    logger.info(fileName + ' is exits ');
     setTimeout(function() {
       callback();
     }, 1)
   } else {
-    console.log('Info: download ' + fileName + ' ...');
+    logger.info('Download ' + fileName + ' ...');
     new Download({mode: '755', extract: false, strip: 1}).get(url).dest(destPath).use(downloadStatus()).run(function(error, files) {
       if (error) {
-        console.log(error);
+        logger.error(error);
         callback && callback(new Error('error: download ' + fileName + ' failed!!!'));
       } else {
-        console.log('Info: download ' + fileName + ' succeed');
+        logger.info('Download ' + fileName + ' success!');
         callback && callback();
       }
     });
@@ -27,7 +29,7 @@ function downloadFile(url, destPath, fileName, callback) {
 }
 function checkFileHash(filePath, fileName, md5, callback) {
   var md5sum = crypto.createHash('md5');
-  console.log('Info: checkHash of the file: ' + fileName);
+  logger.info('CheckHash of the file: ' + fileName);
   var s = fs.ReadStream(path.join(filePath, fileName));
   s.on('data', function(d) {
     md5sum.update(d);
@@ -36,7 +38,7 @@ function checkFileHash(filePath, fileName, md5, callback) {
     var d = md5sum.digest('hex');
     if (md5 === d) {
       callback && callback()
-      console.log('Info: ' + fileName + ' is correct')
+      logger.info(fileName + ' is correct.')
     } else {
       fs.unlinkSync(path.join(filePath, fileName));
       callback && callback(new Error(fileName + ' md5 is incorrect, please exec "webss setup" to download again'))
@@ -44,14 +46,14 @@ function checkFileHash(filePath, fileName, md5, callback) {
   });
 }
 function decompressMaven(callback) {
-  console.log('Info: decompress ' + config.mvnName + ' ...')
+  logger.info('Decompress ' + config.mvnName + ' ...')
   new Decompress({mode: '755'}).src(path.join(config.homePath, config.mvnName)).dest(config.mvnHome).use(Decompress.zip({strip: 1})).run(function(error) {
     if (error) {
-      console.log(error)
-      console.error('error: decompress ' + config.mvnName + ' failed!!!')
+      logger.error(error)
+      logger.error('Decompress ' + config.mvnName + ' failed!!!')
       callback && callback(new Error('error: decompress ' + config.mvnName + ' failed!!!'));
     } else {
-      console.log('Info: decompress ' + config.mvnName + ' succeed')
+      logger.info('Decompress ' + config.mvnName + ' succeed')
       callback && callback();
     }
   });
@@ -62,7 +64,7 @@ exports.download = function(callback) {
     g.next();
     function resume(value) {
       if (value) {
-        console.error(value);
+        logger.error(value);
         return;
       }
       g.next();

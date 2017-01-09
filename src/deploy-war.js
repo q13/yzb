@@ -1,6 +1,6 @@
 /**
 * @Date:   2016-06-13T11:07:46+08:00
-* @Last modified time: 2017-01-09T10:30:26+08:00
+* @Last modified time: 2017-01-09T16:14:24+08:00
 */
 var path = require('path'),
   fs = require('fs'),
@@ -9,7 +9,9 @@ var path = require('path'),
   cp = require('child_process'),
   del = require('del'),
   config = require('./config.js');
-  
+
+var logger = helper.logger();
+
 var exports = module.exports = {};
 var packageExec = path.join(config.mvnHome, '/bin/mvn'),
   startTomcatExec = helper.isWin
@@ -19,7 +21,7 @@ var packageExec = path.join(config.mvnHome, '/bin/mvn'),
     ? 'shutdown.bat'
     : 'shutdown.sh';
 function deleteFolderRecursive(path) {
-  console.log(path.replace(/\\/g, '/') + '/**')
+  logger.info(path.replace(/\\/g, '/') + '/**')
   del.sync([path.replace(/\\/g, '/') + '/**'], {force: true})
 }
 function updateTomcatPort() {
@@ -33,7 +35,7 @@ function updateTomcatPort() {
   fs.writeFileSync(path.join(config.tomcatHome, '/conf/server.xml'), serverConfig);
 }
 function shutdownTomcat(callback) {
-  console.log('Info: shutdown tomcat ...');
+  logger.info('Shutdown tomcat ...');
   cp.exec(shutdownTomcatExec, {
     cwd: path.join(config.tomcatHome, '/bin')
   }, function(err, stdout, stderr) {
@@ -41,7 +43,7 @@ function shutdownTomcat(callback) {
   });
 }
 function execMaven(mvnExec, arg, callback) {
-  console.log('Info: mvn ' + arg + ' ...')
+  logger.info('mvn ' + arg + ' ...')
   var args = []
   if (helper.isWin) {
     args.unshift(mvnExec);
@@ -58,10 +60,10 @@ function execMaven(mvnExec, arg, callback) {
     env: process.env
   });
   mvnPackage.stdout.on('data', function(data) {
-    console.log(data.toString());
+    logger.info(data.toString());
   });
   mvnPackage.stderr.on('data', function(data) {
-    console.log('stderr: ' + data);
+    logger.info('Stderr: ' + data);
   });
   mvnPackage.on('exit', function(code) {
     if (arg[0] === 'clean') {
@@ -71,7 +73,7 @@ function execMaven(mvnExec, arg, callback) {
     var sourceWar;
     fs.readdir(config.sourceWarDir, function(err, files) {
       if (err) {
-        console.error('error: .war is not found!!!');
+        logger.error('.war is not found!!!');
       } else {
         var warFile = files.filter(function(name) {
           return name.match(/.*\.war$/)
@@ -83,12 +85,12 @@ function execMaven(mvnExec, arg, callback) {
           helper.copy(path.join(config.sourceWarDir, sourceWar), path.join(config.tomcatHome, '/webapps'), {
             basename: 'ROOT.war'
           }, function(err) {
-            console.log('Info: deploy : \n' + sourceWar + ' succeed ')
-            console.log('    ' + path.join(config.tomcatHome, '/webapps'))
+            logger.info('Deploy : \n' + sourceWar + ' success.')
+            logger.info('    ' + path.join(config.tomcatHome, '/webapps'))
             callback && callback();
           });
         } else {
-          console.error('error: .war is not found!!!');
+          logger.error('.war is not found!!!');
         }
       }
     })
@@ -96,15 +98,15 @@ function execMaven(mvnExec, arg, callback) {
 }
 exports.deploy = function(callback) {
   if (!fs.existsSync(config.homePath + '/' + config.tomcatName) || !fs.existsSync(config.homePath + '/' + config.mvnName)) {
-    console.log('Error: please exec webss setup first !!!');
+    logger.info('Please exec webss setup first !!!');
     callback && callback('error');
     return;
   }
-  console.log('Info: svn update ...');
+  logger.info('Svn update ...');
   cp.exec('Svn update', {
     cwd: config.currentPath
   }, function(err, stdout, stderr) {
-    console.log(stdout);
+    logger.info(stdout);
     //log('deploy ' + config.contextName + '.war to ' + 'server/ '+port);
     //if (fs.existsSync(removeContextPath + '.war')) {
     //    fs.unlinkSync(removeContextPath + '.war');
@@ -113,19 +115,19 @@ exports.deploy = function(callback) {
     shutdownTomcat(function() {
       //删除tomcat解压目录
       deleteFolderRecursive(config.tomcatHome)
-      console.log('Info: decompress ' + config.tomcatName + ' ...');
+      logger.info('Decompress ' + config.tomcatName + ' ...');
       new Decompress({mode: '777'}).src(path.join(config.homePath, config.tomcatName)).dest(config.tomcatHome).use(Decompress.zip({strip: 1})).run(function(error) {
         fs.readdirSync(path.join(config.tomcatHome, '/bin')).map(function(file) {
           fs.chmodSync(path.join(config.tomcatHome, '/bin/', file), '777')
-          //console.log(arguments)
+          //logger.info(arguments)
         })
         //fs.chmodSync(config.tomcatHome, '+x');
         var removeContextPath = path.join(config.tomcatHome, '/webapps/');
         deleteFolderRecursive(removeContextPath);
         if (error) {
-          console.error('Error: decompress ' + config.tomcatName + ' failed !!!')
+          logger.error('Decompress ' + config.tomcatName + ' failed !!!')
         } else {
-          console.log('Info: decompress ' + config.tomcatName + ' succeed')
+          logger.info('Decompress ' + config.tomcatName + ' succeed')
           updateTomcatPort();
           execMaven(packageExec, ['clean'], function() {
             execMaven(packageExec, ['package'], function() {

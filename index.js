@@ -1,6 +1,6 @@
 /**
 * @Date:   2017-01-06T15:33:10+08:00
-* @Last modified time: 2017-01-09T11:36:38+08:00
+* @Last modified time: 2017-01-09T16:11:56+08:00
 */
 var fs = require('fs'),
   path = require('path'),
@@ -15,6 +15,9 @@ var helper = require('./src/helper.js'),
   downloadZip = require('./src/download-zip.js'),
   deployWar = require('./src/deploy-war.js'),
   transfer = require('./src/proxy.js');
+
+var logger = helper.logger();
+
 var arg,
   wsServerObj,
   startTomcatExec = helper.isWin
@@ -31,7 +34,7 @@ function checkEnv(callback) {
     cwd: config.currentPath
   }, function(error, stdout, stderr) {
     if (error || process.env['JAVA_HOME'] === undefined) {
-      console.log('Info: Please install Java SDK and set JAVA_HOME environment variable !!!')
+      logger.info('Please install Java SDK and set JAVA_HOME environment variable !!!')
     } else {
       callback && callback();
     }
@@ -40,15 +43,15 @@ function checkEnv(callback) {
 function setup() {
   checkEnv(function () {
     downloadZip.download(function() {
-      console.log('Info: yzb setup success!')
-      console.log('Info: please modify your webss.json file in your project dir, then exec "yzb deploy."')
+      logger.info('Setup ready!')
+      logger.info('Please modify your webss.json file in your project dir, then exec "yzb deploy."')
     });
   });
 }
 function deploy() {
   checkEnv(function () {
     deployWar.deploy(function() {
-      console.log('Info: yzb deploy success!')
+      logger.info('Deploy success!')
     });
   });
 }
@@ -68,7 +71,7 @@ function wsServer() {
     // we don't have to implement anything.
   });
   this.server.listen(config.wsServerPort, function() {
-    console.log('Info: web server listen on http://127.0.0.1:' + config.port);
+    logger.info('Web server listen on http://127.0.0.1:' + config.port);
   });
   // create the server
   this.wsServer = new WebSocketServer({httpServer: this.server});
@@ -108,7 +111,7 @@ function middlewareHandle(callback, filePath) {
       })
       if (isCallms) {
         funs.push(function(resume) {
-          console.log(path.resolve(obj.bin))
+          logger.info(path.resolve(obj.bin))
           var n = cp.fork(path.resolve(obj.bin), filePath === undefined
             ? []
             : [
@@ -167,7 +170,7 @@ function synchFiles() {
     middlewareHandle(function() {}, filePath)
     if (event === 'unlink') {
       del([distPath]).then(function(paths) {
-        console.log('Info: delete file -> :\n', distPath);
+        logger.info('Delete file -> :\n', distPath);
       });
     } else {
       fs.unlink(distPath, function() {
@@ -177,7 +180,7 @@ function synchFiles() {
             return
         } catch (ex) {}
         helper.copy(filePath, distDictionary, function(err) {
-          console.log('Info: update file -> \n' + distPath);
+          logger.info('Update file -> \n' + distPath);
           if (config.pageAutoReload) {
             wsServerObj.sendMessage();
           }
@@ -187,7 +190,7 @@ function synchFiles() {
   });
 }
 function shutdownTomcat(callback) {
-  console.log('Info: shutdown tomcat ...');
+  logger.info('Shutdown tomcat ...');
   cp.exec(path.join(config.tomcatHome, '/bin/', shutdownTomcatExec), {
     cwd: path.join(config.tomcatHome, '/bin')
   }, function(err, stdout, stderr) {
@@ -195,11 +198,11 @@ function shutdownTomcat(callback) {
   });
 }
 function startupTomcat(callback) {
-  console.log('Info: start tomcat ...');
+  logger.info('Start tomcat ...');
   fs.stat(path.join(config.tomcatHome, '/bin/', startTomcatExec), function(err) {
     if (err) {
-      console.error('Error: please re-exec "webss deploy"  !!!')
-      console.log(err)
+      logger.error('Please re-exec "webss deploy"  !!!')
+      logger.info(err)
     } else {
       cp.exec(path.join(config.tomcatHome, '/bin/', startTomcatExec), {
         cwd: path.join(config.tomcatHome, '/bin')

@@ -4,6 +4,8 @@ var http = require('http'),
   harmon = require('harmon'),
   connect = require('connect'),
   fs = require('fs');
+var helper = require('./helper.js');
+var logger = helper.logger();
 // TODO socket hang up error
 // from https://nqdeng.github.io/7-days-nodejs/
 // from http://stackoverflow.com/questions/16472497/nodejs-max-socket-pooling-settings
@@ -67,7 +69,7 @@ exports.transfer = function() {
         p = p.replace(/\?v=[\d|\.|\w|&|=|-]*/, ''); // 去掉后面的参数 manage.js?v=1.2-6&_=123
         fs.readFile(p, function(error, data) {
           if (error) {
-            console.error('Error: file ' + p + ' not found');
+            logger.error('File ' + p + ' not found');
             res.writeHead(404, {'source': 'from webss'});
             res.write('404 not found ');
             res.end();
@@ -81,7 +83,7 @@ exports.transfer = function() {
         proxy.web(req, res);
       }
     })
-    console.log("listening on port " + objServer.localPort + ' of ', objServer.desc + ' --> ' + objServer.remoteUrl);
+    logger.info("Listening on port " + objServer.localPort + ' of ', objServer.desc + ' --> ' + objServer.remoteUrl);
     http.createServer(app).listen(objServer.localPort);
   })
 }
