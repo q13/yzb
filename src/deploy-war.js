@@ -1,6 +1,6 @@
 /**
 * @Date:   2016-06-13T11:07:46+08:00
-* @Last modified time: 2017-01-09T16:14:24+08:00
+* @Last modified time: 2017-01-16T10:40:47+08:00
 */
 var path = require('path'),
   fs = require('fs'),
@@ -49,6 +49,7 @@ function execMaven(mvnExec, arg, callback) {
     args.unshift(mvnExec);
     args.unshift('/c'),
     args.unshift('/s');
+    args.unshift('/U');
     args.push(arg);
     args.push('-Dmaven.test.skip=true');
     mvnExec = process.env.COMSPEC || 'cmd.exe';
