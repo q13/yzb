@@ -1,6 +1,6 @@
 /**
 * @Date:   2017-01-06T15:33:10+08:00
-* @Last modified time: 2017-01-09T16:11:56+08:00
+* @Last modified time: 2017-01-19T15:08:33+08:00
 */
 var fs = require('fs'),
   path = require('path'),
@@ -48,9 +48,9 @@ function setup() {
     });
   });
 }
-function deploy() {
+function deploy(options) {
   checkEnv(function () {
-    deployWar.deploy(function() {
+    deployWar.deploy(options, function() {
       logger.info('Deploy success!')
     });
   });

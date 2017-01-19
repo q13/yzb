@@ -1,6 +1,6 @@
 /**
 * @Date:   2016-06-13T11:07:46+08:00
-* @Last modified time: 2017-01-16T10:40:47+08:00
+* @Last modified time: 2017-01-19T15:37:33+08:00
 */
 var path = require('path'),
   fs = require('fs'),
@@ -42,19 +42,21 @@ function shutdownTomcat(callback) {
     callback && callback();
   });
 }
-function execMaven(mvnExec, arg, callback) {
+function execMaven(mvnExec, arg, exts, callback) {
   logger.info('mvn ' + arg + ' ...')
-  var args = []
+  var args = [];
+  exts = exts || [];
   if (helper.isWin) {
     args.unshift(mvnExec);
     args.unshift('/c'),
     args.unshift('/s');
-    args.unshift('/U');
+    args = exts.concat(args);
     args.push(arg);
     args.push('-Dmaven.test.skip=true');
     mvnExec = process.env.COMSPEC || 'cmd.exe';
   } else {
-    args.push(arg)
+    args = exts.concat(args);
+    args.push(arg);
   }
   var mvnPackage = cp.spawn(mvnExec, args, {
     cwd: config.currentPath,
@@ -97,11 +99,15 @@ function execMaven(mvnExec, arg, callback) {
     })
   });
 }
-exports.deploy = function(callback) {
+exports.deploy = function(options, callback) {
   if (!fs.existsSync(config.homePath + '/' + config.tomcatName) || !fs.existsSync(config.homePath + '/' + config.mvnName)) {
     logger.info('Please exec webss setup first !!!');
     callback && callback('error');
     return;
+  }
+  let commandArgs = [];
+  if (options.updateSnapshots) {
+    commandArgs.push('/U');
   }
   logger.info('Svn update ...');
   cp.exec('Svn update', {
@@ -130,8 +136,8 @@ exports.deploy = function(callback) {
         } else {
           logger.info('Decompress ' + config.tomcatName + ' succeed')
           updateTomcatPort();
-          execMaven(packageExec, ['clean'], function() {
-            execMaven(packageExec, ['package'], function() {
+          execMaven(packageExec, ['clean'], commandArgs, function() {
+            execMaven(packageExec, ['package'], commandArgs, function() {
               callback && callback()
             })
           })

@@ -1,6 +1,6 @@
 {
   "name": "yzb",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "For Maven build and web service.",
   "main": "index.js",
   "bin": {
