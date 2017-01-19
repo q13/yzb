@@ -1,6 +1,6 @@
 /**
 * @Date:   2016-06-13T11:07:46+08:00
-* @Last modified time: 2017-01-19T15:37:33+08:00
+* @Last modified time: 2017-01-19T16:11:56+08:00
 */
 var path = require('path'),
   fs = require('fs'),
@@ -50,13 +50,15 @@ function execMaven(mvnExec, arg, exts, callback) {
     args.unshift(mvnExec);
     args.unshift('/c'),
     args.unshift('/s');
-    args = exts.concat(args);
+    //args = exts.concat(args);
     args.push(arg);
+    args = args.concat(exts);
     args.push('-Dmaven.test.skip=true');
     mvnExec = process.env.COMSPEC || 'cmd.exe';
   } else {
-    args = exts.concat(args);
+    //args = exts.concat(args);
     args.push(arg);
+    args = args.concat(exts);
   }
   var mvnPackage = cp.spawn(mvnExec, args, {
     cwd: config.currentPath,
@@ -107,7 +109,7 @@ exports.deploy = function(options, callback) {
   }
   let commandArgs = [];
   if (options.updateSnapshots) {
-    commandArgs.push('/U');
+    commandArgs.push('-U');
   }
   logger.info('Svn update ...');
   cp.exec('Svn update', {
