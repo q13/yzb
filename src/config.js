@@ -35,9 +35,11 @@ var tomcatSource = {
 }
 var mvnSource = {
   '3': {
-    name: 'apache-maven-3.3.3-bin.zip',
-    url: 'http://ftp.jaist.ac.jp/pub/apache/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.zip',
-    md5: '6e5da03a3324f616493a0fd09d6383fc'
+    name: 'apache-maven-3.3.9-bin.zip',
+    //url: 'http://ftp.jaist.ac.jp/pub/apache/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.zip',
+    url: 'http://apache.mirrors.tds.net/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip',
+    md5: 'e7ebd0b8d6811b42a5dad91fb27fe9b4'
+    //md5: '6e5da03a3324f616493a0fd09d6383fc'
   }
 }
 exports.port = config.port;
